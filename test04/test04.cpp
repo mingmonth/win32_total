@@ -103,7 +103,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    // 클라이언트 영역 크기 설정
    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, TRUE);
    hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, rect.right - rect.left, rect.bottom - rect.top, nullptr, nullptr, hInstance, nullptr);
+      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -137,7 +137,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
 	case WM_MOVE:
+		// 전체 윈도우 크기 조사
 		GetWindowRect(hWnd, &rect);
+		// WM_PAINT 메시지 발생!
 		InvalidateRect(hWnd, 0, TRUE);
 		break;
     case WM_COMMAND:
@@ -146,6 +148,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // 메뉴 선택을 구문 분석합니다.
             switch (wmId)
             {
+			case ID_32771:	// 크기 300 x 300
+				MoveWindow(hWnd, 100, 100, 300, 300, TRUE);
+				break;
+			case ID_32772:	// 250 x 250
+				MoveWindow(hWnd, 100, 100, 250, 250, TRUE);
+				break;
+			case ID_32773:	// 100 x 100
+				MoveWindow(hWnd, 100, 100, 100, 100, TRUE);
+				break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
@@ -166,7 +177,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다.
 			// 클라이언트 크기 조사
 			//GetClientRect(hWnd, &rect);
-			sprintf(string, "x: %d, y: %d, width: %d, height: %d", rect.left, rect.top, rect.right - rect.left + 1, rect.bottom - rect.top + 1);
+			GetWindowRect(hWnd, &rect);
+			sprintf(string, "x: %d, y: %d, width: %d, height: %d", rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
 			TextOut(hdc, 10, 10, string, strlen(string));
 
 			/*hFileLoadBitmap = (HBITMAP)LoadImage(NULL, "lena.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
