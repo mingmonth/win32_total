@@ -141,8 +141,22 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				return (INT_PTR)TRUE;
 			}
 			break;
-		}
-		
+		case IDC_BUTTON4:	// 삭제
+			if (nIndex != -1) {
+				ListView_DeleteItem(hList, nIndex);
+				int nCount = ListView_GetItemCount(hList);
+				for (int i = nIndex; i < nCount; i++) {
+					sprintf(string, "%d", i);
+					ListView_SetItemText(hList, i, 0, string);
+				}
+				return (INT_PTR)TRUE;
+			}
+			break;
+		case IDC_BUTTON5:	// 모두 삭제
+			ListView_DeleteAllItems(hList);
+			return (INT_PTR)TRUE;
+			break;
+		}		
 
 		/*if (LOWORD(wParam) == IDC_BUTTON1) {	// 입력
 			
