@@ -1,7 +1,7 @@
 ﻿  test03.cpp
 c:\users\ys992\onedrive\문서\visual studio 2015\projects\test03\test03.cpp(16): warning C4996: 'freopen': This function or variable may be unsafe. Consider using freopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(240): note: 'freopen' 선언을 참조하십시오.
-c:\users\ys992\onedrive\문서\visual studio 2015\projects\test03\test03.cpp(78): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+c:\users\ys992\onedrive\문서\visual studio 2015\projects\test03\test03.cpp(81): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1769): note: 'sprintf' 선언을 참조하십시오.
   test03.vcxproj -> c:\users\ys992\onedrive\문서\visual studio 2015\Projects\test03\Debug\test03.exe
   test03.vcxproj -> c:\users\ys992\onedrive\문서\visual studio 2015\Projects\test03\Debug\test03.pdb (Full PDB)

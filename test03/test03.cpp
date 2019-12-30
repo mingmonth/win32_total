@@ -71,7 +71,10 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         return (INT_PTR)TRUE;
 
     case WM_COMMAND:
-		if (LOWORD(wParam) == IDC_BUTTON1) {	// 입력
+
+		switch (LOWORD(wParam))
+		{
+		case IDC_BUTTON1:
 			lvItem.iItem = ListView_GetItemCount(hList);
 			lvItem.iSubItem = 0;
 			lvItem.mask = LVIF_TEXT;
@@ -94,8 +97,25 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			SetDlgItemText(hDlg, IDC_EDIT1, NULL);
 			SetDlgItemText(hDlg, IDC_EDIT2, NULL);
 			SetDlgItemText(hDlg, IDC_EDIT3, NULL);
-
 			return (INT_PTR)TRUE;
+			break;
+		case IDC_BUTTON2:
+			// 선택된 아이템이 있으면.
+			if (nIndex != -1) {
+				GetDlgItemText(hDlg, IDC_EDIT1, string, 10);
+				ListView_SetItemText(hList, nIndex, 1, string);
+				GetDlgItemText(hDlg, IDC_EDIT2, string, 10);
+				ListView_SetItemText(hList, nIndex, 2, string);
+				GetDlgItemText(hDlg, IDC_EDIT3, string, 10);
+				ListView_SetItemText(hList, nIndex, 3, string);
+			}
+			return (INT_PTR)TRUE;
+			break;
+		}
+		
+
+		/*if (LOWORD(wParam) == IDC_BUTTON1) {	// 입력
+			
 		}
         if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
         {
@@ -103,7 +123,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             EndDialog(hDlg, LOWORD(wParam));
             return (INT_PTR)TRUE;
         }
-        break;
+        break;*/
     }
     return (INT_PTR)FALSE;
 }
