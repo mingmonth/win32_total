@@ -100,6 +100,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    HWND hWnd;
    RECT rect = { 0, 0, 299, 299 };
+   // 클라이언트 영역 크기 설정
    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, TRUE);
    hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, rect.right - rect.left, rect.bottom - rect.top, nullptr, nullptr, hInstance, nullptr);
@@ -131,8 +132,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	HDC hResourceMemDC, hFileMemDC;
 	BITMAP ResourceBitmap, FileBitmap;*/	
 
+	static RECT rect;
+
     switch (message)
     {
+	case WM_MOVE:
+		GetWindowRect(hWnd, &rect);
+		InvalidateRect(hWnd, 0, TRUE);
+		break;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -153,11 +160,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_PAINT:
         {
 			char string[100];
-			RECT rect;
+			//RECT rect;
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다.
-			GetClientRect(hWnd, &rect);
+			// 클라이언트 크기 조사
+			//GetClientRect(hWnd, &rect);
 			sprintf(string, "x: %d, y: %d, width: %d, height: %d", rect.left, rect.top, rect.right - rect.left + 1, rect.bottom - rect.top + 1);
 			TextOut(hdc, 10, 10, string, strlen(string));
 
