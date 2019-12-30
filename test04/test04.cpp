@@ -103,7 +103,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    // 클라이언트 영역 크기 설정
    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, TRUE);
    hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, rect.right - rect.left, rect.bottom - rect.top, nullptr, nullptr, hInstance, nullptr);
+      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -135,12 +135,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	static HDC hMemDC;
 	//HBITMAP hBitmap;
 	static BITMAP Bitmap;
-	static POINT ptXY0, ptXY1;
-
+	static POINT ptXY0, ptXY1;	
 	static RECT rect;
 
     switch (message)
     {
+	case WM_LBUTTONDOWN:
+		ptXY1.x = ptXY0.x = LOWORD(lParam);
+		ptXY1.y = ptXY0.y = HIWORD(lParam);
+		break;
+	case WM_MOUSEMOVE:
+		if (wParam == MK_LBUTTON) {
+			ptXY1.x = LOWORD(lParam);
+			ptXY1.y = LOWORD(lParam);
+			InvalidateRect(hWnd, 0, TRUE);
+		}
+		break;
+	case WM_CREATE:
+		HBITMAP hBitmap;
+		hMemDC = CreateCompatibleDC(NULL);
+		hBitmap = (HBITMAP)LoadImage(NULL, "lena.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+		GetObject(hBitmap, sizeof(BITMAP), &Bitmap);
+		SelectObject(hMemDC, hBitmap);
+		DeleteObject(hBitmap);
+		break;
 	case WM_MOVE:
 		// 전체 윈도우 크기 조사
 		GetWindowRect(hWnd, &rect);
@@ -179,16 +198,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//RECT rect;
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다.
-			HBITMAP hBitmap;
-			hBitmap = CreateCompatibleBitmap(hdc, 200, 200);
+            // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다.	
+			BitBlt(hdc, 0, 0, Bitmap.bmWidth, Bitmap.bmHeight, hMemDC, 0, 0, SRCCOPY);
+			SetROP2(hdc, R2_NOTXORPEN);
+			Rectangle(hdc, ptXY0.x, ptXY0.y, ptXY1.x, ptXY1.y);
+			EndPaint(hWnd, &ps);
+			/*hBitmap = CreateCompatibleBitmap(hdc, 200, 200);
 			hMemDC = CreateCompatibleDC(hdc);
 			SelectObject(hMemDC, hBitmap);
 			PatBlt(hMemDC, 0, 0, 200, 200, WHITENESS);
 			Rectangle(hMemDC, 50, 50, 150, 150);
 			BitBlt(hdc, 0, 0, 200, 200, hMemDC, 0, 0, SRCCOPY);
 			DeleteObject(hMemDC);
-			EndPaint(hWnd, &ps);
+			EndPaint(hWnd, &ps);*/
 
 			// 클라이언트 크기 조사
 			//GetClientRect(hWnd, &rect);
