@@ -30,10 +30,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 
-	static HWND hList;
-	LVCOLUMN lvColumn;
+	static HWND hList;	
 	char *strMenu[] = {"亲格1", "亲格2", "亲格3", "亲格4"};
-    UNREFERENCED_PARAMETER(lParam);
+	LVCOLUMN lvColumn;
+	LVITEM lvItem;
+	char string[100];
 	switch (message)
 	{
 	case WM_CLOSE:
@@ -52,6 +53,16 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         return (INT_PTR)TRUE;
 
     case WM_COMMAND:
+		if (LOWORD(wParam) == IDC_BUTTON1) {
+			lvItem.iItem = ListView_GetItemCount(hList);
+			lvItem.iSubItem = 0;
+			lvItem.mask = LVIF_TEXT;
+			sprintf(string, "%d", lvItem.iItem);
+			printf("%d\n", lvItem.iItem);
+			lvItem.pszText = string;
+			ListView_InsertItem(hList, &lvItem);
+			return (INT_PTR)TRUE;
+		}
         if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
         {
 			FreeConsole();
