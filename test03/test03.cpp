@@ -17,9 +17,9 @@ void init() {
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
+	_In_opt_ HINSTANCE hPrevInstance,
+	_In_ LPWSTR    lpCmdLine,
+	_In_ int       nCmdShow)
 {
 	init();
 	DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIALOG1), NULL, DlgProc);
@@ -30,19 +30,37 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 
-	static HWND hList;	
-	char *strMenu[] = {"순번", "C  ", "C++", "Win32"};
+	static HWND hList;
+	char *strMenu[] = { "순번", "C  ", "C++", "Win32" };
 	LVCOLUMN lvColumn;
 	LVITEM lvItem;
 	char string[100];
+	static int nIndex = -1;
 	switch (message)
 	{
+	case WM_NOTIFY:
+		if (((LPNMHDR)lParam)->code == NM_CLICK) {
+			// 아이템 인덱스 알아내기
+			nIndex = ListView_GetNextItem(hList, -1, LVNI_SELECTED);
+			// 서브 아이템 데이터 가져오기
+			ListView_GetItemText(hList, nIndex, 1, string, 10);
+			// 에디트 컨트롤에 내용 설정
+			SetDlgItemText(hDlg, IDC_EDIT1, string);
+			ListView_GetItemText(hList, nIndex, 2, string, 10);
+			SetDlgItemText(hDlg, IDC_EDIT2, string);
+			ListView_GetItemText(hList, nIndex, 3, string, 10);
+			SetDlgItemText(hDlg, IDC_EDIT3, string);			
+		}
+		break;
+
 	case WM_CLOSE:
 		EndDialog(hDlg, LOWORD(wParam));
 		return (INT_PTR)TRUE;
 		break;
 	case WM_INITDIALOG:
 		hList = GetDlgItem(hDlg, IDC_LIST1);
+		// 리스트 뷰 스타일 설정
+		ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 		lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 		lvColumn.fmt = LVCFMT_CENTER;
 		for (int i = 0; i < 4; i++) {
