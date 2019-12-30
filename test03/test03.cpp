@@ -31,7 +31,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 
 	static HWND hList;	
-	char *strMenu[] = {"항목1", "항목2", "항목3", "항목4"};
+	char *strMenu[] = {"순번", "C  ", "C++", "Win32"};
 	LVCOLUMN lvColumn;
 	LVITEM lvItem;
 	char string[100];
@@ -46,21 +46,37 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 		lvColumn.fmt = LVCFMT_CENTER;
 		for (int i = 0; i < 4; i++) {
-			lvColumn.cx = strlen(strMenu[i]) * 10;
+			lvColumn.cx = strlen(strMenu[i]) * 15;
 			lvColumn.pszText = strMenu[i];
 			ListView_InsertColumn(hList, i, &lvColumn);
 		}
         return (INT_PTR)TRUE;
 
     case WM_COMMAND:
-		if (LOWORD(wParam) == IDC_BUTTON1) {
+		if (LOWORD(wParam) == IDC_BUTTON1) {	// 입력
 			lvItem.iItem = ListView_GetItemCount(hList);
 			lvItem.iSubItem = 0;
 			lvItem.mask = LVIF_TEXT;
 			sprintf(string, "%d", lvItem.iItem);
 			printf("%d\n", lvItem.iItem);
 			lvItem.pszText = string;
+			// 아이템 생성 및 삽입
 			ListView_InsertItem(hList, &lvItem);
+
+			// 에디트 컨트롤에 값 string 으로 가져오기
+			GetDlgItemText(hDlg, IDC_EDIT1, string, 10);
+			// 서브 아이템에 데이터 저장
+			ListView_SetItemText(hList, lvItem.iItem, 1, string);
+			GetDlgItemText(hDlg, IDC_EDIT2, string, 10);
+			ListView_SetItemText(hList, lvItem.iItem, 2, string);
+			GetDlgItemText(hDlg, IDC_EDIT3, string, 10);
+			ListView_SetItemText(hList, lvItem.iItem, 3, string);
+
+			// 에디트 컨트롤 내용 클리어
+			SetDlgItemText(hDlg, IDC_EDIT1, NULL);
+			SetDlgItemText(hDlg, IDC_EDIT2, NULL);
+			SetDlgItemText(hDlg, IDC_EDIT3, NULL);
+
 			return (INT_PTR)TRUE;
 		}
         if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
