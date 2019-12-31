@@ -148,7 +148,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if (wParam == MK_LBUTTON) {
 			ptXY1.x = LOWORD(lParam);
 			ptXY1.y = LOWORD(lParam);
-			InvalidateRect(hWnd, 0, TRUE);
+			//InvalidateRect(hWnd, 0, TRUE);
+			InvalidateRect(hWnd, 0, FALSE);
 		}
 		break;
 	case WM_CREATE:

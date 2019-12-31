@@ -1,3 +1,4 @@
-﻿  test04.cpp
+﻿cl : 명령줄 warning D9028: 최소 다시 빌드에 실패했습니다. 정상 빌드로 되돌립니다.
+  test04.cpp
   test04.vcxproj -> c:\users\ys992\onedrive\문서\visual studio 2015\Projects\test04\Debug\test04.exe
   test04.vcxproj -> c:\users\ys992\onedrive\문서\visual studio 2015\Projects\test04\Debug\test04.pdb (Full PDB)
