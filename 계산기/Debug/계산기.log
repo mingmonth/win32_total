@@ -1,5 +1,5 @@
 ﻿  계산기.cpp
-c:\users\ys992\onedrive\문서\visual studio 2015\projects\계산기\계산기.cpp(15): warning C4996: 'freopen': This function or variable may be unsafe. Consider using freopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+c:\users\ys992\onedrive\문서\visual studio 2015\projects\계산기\계산기.cpp(19): warning C4996: 'freopen': This function or variable may be unsafe. Consider using freopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(240): note: 'freopen' 선언을 참조하십시오.
-  계산기.vcxproj -> c:\users\ys992\onedrive\문서\visual studio 2015\Projects\계산기\Debug\계산기.exe
-  계산기.vcxproj -> c:\users\ys992\onedrive\문서\visual studio 2015\Projects\계산기\Debug\계산기.pdb (Full PDB)
+  계산기.vcxproj -> C:\Users\ys992\OneDrive\문서\Visual Studio 2015\Projects\계산기\Debug\계산기.exe
+  계산기.vcxproj -> C:\Users\ys992\OneDrive\문서\Visual Studio 2015\Projects\계산기\Debug\계산기.pdb (Full PDB)
