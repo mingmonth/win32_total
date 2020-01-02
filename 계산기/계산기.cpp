@@ -59,6 +59,20 @@ void inputOperatorInString(string &s, string op) {
 	}	
 }
 
+void checkString(string &s) {
+	// 빈 문자열인지 검사
+	if (!s.empty()) {
+		// 문자열이 3보다 커야 마지막 입력 값을 검사 하도록 처리
+		if (s.length() > 3) {
+			// 마지막 입력 값 검사, 뒤에 공백을 같이 넣어줘야 함.
+			if (!strcmp(&s[s.length() - 2], "+ ") || !strcmp(&s[s.length() - 2], "- ") || !strcmp(&s[s.length() - 2], "* ") || !strcmp(&s[s.length() - 2], "/ ")) {
+				// 기존 연산자 삭제하고 추가
+				s.erase(s.length() - 3, 3);				
+			}			
+		}		
+	}
+}
+
 void backSpace(string &s) {
 	// 빈 문자열인지 검사
 	if (!s.empty()) {
@@ -134,6 +148,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		case IDC_BUTTON3:	// Enter
 		{
+			checkString(s);
 			printf("Enter\n");
 			stringstream ss;
 			ss.str(s);
@@ -229,7 +244,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		}		
 		cout << s << endl;	
-		InvalidateRect(hDlg, NULL, TRUE);		
+		InvalidateRect(hDlg, NULL, FALSE);
 		break;
 	}		
 	case WM_CLOSE:
@@ -241,6 +256,10 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hDlg, &ps);
 		SetDlgItemText(hDlg, IDC_EDIT1, s.c_str());
+		/*RECT rc = {10, 10, 173, 120};// x, y, width, height				
+		UINT format = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_WORDBREAK;
+		DrawText(hdc, s.c_str(), -1, &rc, format | DT_CALCRECT);
+		DrawText(hdc, s.c_str(), -1, &rc, format);*/
 		EndPaint(hDlg, &ps);
 		break;
     }
