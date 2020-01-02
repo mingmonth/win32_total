@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "계산기.h"
 #include "Windowsx.h"
+#include "Commctrl.h"
 #include "stdio.h"
 #include <string>
 #include <iostream>
@@ -14,10 +15,10 @@ using namespace std;
 
 struct oper {
 	int prior;		// 연산자 우선순위
-	string op;	// 연산자
+	string op;		// 연산자
 };
 
-stack<int> numStack;	// 숫자 스택
+stack<double> numStack;	// 숫자 스택
 stack<oper> opStack;	// 연산자 스택
 
 #define MAX_LOADSTRING 100
@@ -39,7 +40,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	return 0;
 }
 
-void inputOperatorInString(string &s, string op) {	
+void inputOperatorInString(string &s, string op) {
 	// 빈 문자열인지 검사
 	if (!s.empty()) {		
 		// 문자열이 3보다 커야 마지막 입력 값을 검사 하도록 처리
@@ -56,6 +57,26 @@ void inputOperatorInString(string &s, string op) {
 			s.append(" " + op + " ");
 		}				
 	}	
+}
+
+void backSpace(string &s) {
+	// 빈 문자열인지 검사
+	if (!s.empty()) {
+		// 문자열이 3보다 커야 마지막 입력 값을 검사 하도록 처리
+		if (s.length() > 3) {
+			// 마지막 입력 값 검사, 뒤에 공백을 같이 넣어줘야 함.
+			if (!strcmp(&s[s.length() - 2], "+ ") || !strcmp(&s[s.length() - 2], "- ") || !strcmp(&s[s.length() - 2], "* ") || !strcmp(&s[s.length() - 2], "/ ")) {
+				// 기존 연산자 삭제
+				s.erase(s.length() - 3, 3);
+			}
+			else {
+				s.erase(s.length() - 1, 1);
+			}
+		}
+		else {
+			s.erase(s.length() - 1, 1);
+		}
+	}
 }
 
 void calculate() {
@@ -82,43 +103,19 @@ void calculate() {
 	numStack.push(result);
 }
 
-int calcProcessing(string s) {
-	int nRet = 0;
-	int startIndex = 0;
-	while (true) {
-		int fIndex = s.find("*", startIndex);
-		if (fIndex == -1) {			
-			string part = s.substr(startIndex);
-			if (part == "") {
-				break;
-			}			
-			cout << part << endl;
-			cout << "last part" << endl;
-			printf("+ 연산자가 더 이상 없습니다.\n");
-			break;
-		} else {
-			int count = fIndex - startIndex;
-			string part = s.substr(startIndex, count);
-
-			cout << part << endl;
-			startIndex = fIndex + 1;
-		}
-	}
-	return nRet;
-}
-
 // 정보 대화 상자의 메시지 처리기입니다.
 INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static string s;
+	char contents[100];
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
     case WM_INITDIALOG:
         return (INT_PTR)TRUE;
 
-	case WM_COMMAND: {
-		string op;		
+	case WM_COMMAND: {		
+		string op;
 		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
 		{
 			EndDialog(hDlg, LOWORD(wParam));
@@ -133,6 +130,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		case IDC_BUTTON2:	// C:clear
 			printf("C");
 			s.clear();
+			SetDlgItemText(hDlg, IDC_STATIC, NULL);
 			break;
 		case IDC_BUTTON3:	// Enter
 		{
@@ -172,7 +170,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					opStack.push({ prior, tok });
 				}
 				else {
-					numStack.push(stoi(tok));
+					numStack.push(stod(tok));
 				}
 			}
 
@@ -181,7 +179,9 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 
 			cout << numStack.top() << endl;
-
+			ostringstream os;
+			os << numStack.top();
+			SetDlgItemText(hDlg, IDC_STATIC, os.str().c_str());
 			break;
 		}			
 		case IDC_BUTTON4:	// 1
@@ -215,10 +215,8 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			s.append("9");
 			break;
 		case IDC_BUTTON14:	// Back
-			printf("Back");
-			if (!s.empty()) {
-				s.erase(s.length() - 1, 1);
-			}
+			printf("Back");			
+			backSpace(s);
 			break;
 		case IDC_BUTTON15:	// /
 			inputOperatorInString(s, "/");			
@@ -229,8 +227,9 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		case IDC_BUTTON17:	// -
 			inputOperatorInString(s, "-");			
 			break;
-		}
-		cout << s << endl;
+		}		
+		cout << s << endl;	
+		InvalidateRect(hDlg, NULL, TRUE);		
 		break;
 	}		
 	case WM_CLOSE:
@@ -238,7 +237,13 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		EndDialog(hDlg, LOWORD(wParam));
 		return (INT_PTR)TRUE;
 		break;
+	case WM_PAINT:
+		PAINTSTRUCT ps;
+		HDC hdc = BeginPaint(hDlg, &ps);
+		SetDlgItemText(hDlg, IDC_EDIT1, s.c_str());
+		EndPaint(hDlg, &ps);
+		break;
     }
-
+	
     return (INT_PTR)FALSE;
 }
