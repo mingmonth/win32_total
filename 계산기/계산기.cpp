@@ -25,13 +25,19 @@ stack<oper> opStack;	// 연산자 스택
 #define MAX_LOADSTRING 100
 
 INT_PTR CALLBACK    DlgProc(HWND, UINT, WPARAM, LPARAM);
-HHOOK hHook{ NULL };
+HHOOK hHook { NULL };
 static string s;
 HWND g_hDlg;
 
 void init() {
 	AllocConsole();
 	freopen("CONOUT$", "wt", stdout);
+}
+
+void close(HWND hDlg, WPARAM wParam) {
+	FreeConsole();
+	UnhookWindowsHookEx(hHook);
+	EndDialog(hDlg, LOWORD(wParam));
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -52,11 +58,11 @@ void makeString(string &s, int nFlag, string op) {
 		if (s.length() > 3) {
 			// 마지막 입력 값 검사, 뒤에 공백을 같이 넣어줘야 함.
 			if (!strcmp(&s[s.length() - 2], "+ ") || !strcmp(&s[s.length() - 2], "- ") || !strcmp(&s[s.length() - 2], "* ") || !strcmp(&s[s.length() - 2], "/ ")) {
-				// 기존 연산자 삭제				
-				s.erase(s.length() - 3, 3);	
+				// 기존 연산자 삭제
+				s.erase(s.length() - 3, 3);
 				if (nFlag == 0) {	// 연산자 추가
 					s.append(" " + op + " ");
-				}								
+				}
 			}
 			else if (!strcmp(&s[s.length() - 1], ".")) {
 				printf("소수점이 이미 찍혀있습니다!");
@@ -72,7 +78,7 @@ void makeString(string &s, int nFlag, string op) {
 					s.append(op);
 				}
 			}
-		}							
+		}
 		else {
 			if (!strcmp(&s[s.length() - 1], ".")) {
 				printf("소수점이 이미 찍혀있습니다!");
@@ -181,36 +187,52 @@ LRESULT CALLBACK KeybdProc(int code, WPARAM wParam, LPARAM lParam) {
 		DWORD wScanCode = kbdStruct->scanCode;
 
 		BYTE lpKeyState[256];
-		GetKeyboardState(lpKeyState);		
+		GetKeyboardState(lpKeyState);
 		if (wVirtKey == VK_RETURN) {
 			printf("Enter KEY!!!\n");
 			char result[100] = { 0, };
-			enterAction(result);			
+			enterAction(result);
 			SetDlgItemText(g_hDlg, IDC_STATIC, result);
+			return TRUE;
+		}
+		else if(wVirtKey == VK_BACK) {
+			printf("BACK KEY!!!\n");
+			makeString(s, 2, "");
+			InvalidateRect(g_hDlg, NULL, FALSE);
+			return TRUE;
+		}
+		else if (wVirtKey == VK_ESCAPE) {
+			printf("ESC KEY!!!\n");
+			close(g_hDlg, wParam);
 			return TRUE;
 		}
 
 		char result;
 		ToAscii(wVirtKey, wScanCode, lpKeyState, (LPWORD)&result, 0);
-		printf("d: %d, x: %x, c: %c\n", result, result, result);		
+		printf("d: %d, x: %x, c: %c\n", result, result, result);
 		switch (result) {
-			case '1': printf("1\n"); s.append("1"); break;
-			case '2': printf("2\n"); s.append("2"); break;
-			case '3': printf("3\n"); s.append("3"); break;
-			case '4': printf("4\n"); s.append("4"); break;
-			case '5': printf("5\n"); s.append("5"); break;
-			case '6': printf("6\n"); s.append("6"); break;
-			case '7': printf("7\n"); s.append("7"); break;
-			case '8': printf("8\n"); s.append("8"); break;
-			case '9': printf("9\n"); s.append("9"); break;
-			case '0': printf("0\n"); s.append("0"); break;		
-			case '+': printf("+\n"); makeString(s, 0, "+"); break;
-			case '-': printf("-\n"); makeString(s, 0, "-"); break;
-			case '*': printf("*\n"); makeString(s, 0, "*"); break;
-			case '/': printf("/\n"); makeString(s, 0, "/"); break;
-			case '.': printf(".\n"); makeString(s, 3, "."); break;
-			case '(': printf("(\n"); s.append(" ( "); break;
-			case ')': printf(")\n"); s.append(" ) "); break;
+		case '1': printf("1\n"); s.append("1"); break;
+		case '2': printf("2\n"); s.append("2"); break;
+		case '3': printf("3\n"); s.append("3"); break;
+		case '4': printf("4\n"); s.append("4"); break;
+		case '5': printf("5\n"); s.append("5"); break;
+		case '6': printf("6\n"); s.append("6"); break;
+		case '7': printf("7\n"); s.append("7"); break;
+		case '8': printf("8\n"); s.append("8"); break;
+		case '9': printf("9\n"); s.append("9"); break;
+		case '0': printf("0\n"); s.append("0"); break;
+		case '+': printf("+\n"); makeString(s, 0, "+"); break;
+		case '-': printf("-\n"); makeString(s, 0, "-"); break;
+		case '*': printf("*\n"); makeString(s, 0, "*"); break;
+		case '/': printf("/\n"); makeString(s, 0, "/"); break;
+		case '.': printf(".\n"); makeString(s, 3, "."); break;
+		case '(': printf("(\n"); s.append(" ( "); break;
+		case ')': printf(")\n"); s.append(" ) "); break;
+		case 'c':
+			printf("c\n");
+			s.clear();
+			SetDlgItemText(g_hDlg, IDC_STATIC, NULL);
+		break;
 		}
 
 		cout << s << endl;
@@ -223,68 +245,66 @@ LRESULT CALLBACK KeybdProc(int code, WPARAM wParam, LPARAM lParam) {
 
 // 정보 대화 상자의 메시지 처리기입니다.
 INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{		
+{
     UNREFERENCED_PARAMETER(lParam);	
     switch (message)
-    {		
-    case WM_INITDIALOG:		
+    {
+    case WM_INITDIALOG:
 		g_hDlg = hDlg;
 		hHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeybdProc, NULL, 0);
 		if (hHook == NULL) {
 			std::cout << "Keyboard hook failed!" << std::endl;
-		}		
+		}
         return (INT_PTR)TRUE;
 
-	case WM_COMMAND: {		
-		string op;		
+	case WM_COMMAND: {
+		string op;
 
 		switch (LOWORD(wParam)) {
-		case IDC_BUTTON1: s.append("0"); break;	// 0			
+		case IDC_BUTTON1: s.append("0"); break;	// 0
 		case IDC_BUTTON2:	// C:clear
 			printf("C");
 			s.clear();
 			SetDlgItemText(hDlg, IDC_STATIC, NULL);
 			break;
 		case IDC_BUTTON3:	// Enter
-		{		
+		{
 			char result[100] = { 0, };
 			enterAction(result);
 			SetDlgItemText(hDlg, IDC_STATIC, result);
 			break;
-		}			
-		case IDC_BUTTON4: s.append("1"); break;	// 1						
-		case IDC_BUTTON5: s.append("2"); break;	// 2						
-		case IDC_BUTTON6: s.append("3"); break;	// 3			
-		case IDC_BUTTON7: s.append("4"); break;	// 4						
-		case IDC_BUTTON8: s.append("5"); break;	// 5						
-		case IDC_BUTTON9: s.append("6"); break;	// 6						
-		case IDC_BUTTON10: makeString(s, 0, "+"); break; // +						
-		case IDC_BUTTON11: s.append("7"); break;	// 7						
-		case IDC_BUTTON12: s.append("8"); break;	// 8						
-		case IDC_BUTTON13: s.append("9"); break;	// 9						
+		}
+		case IDC_BUTTON4: s.append("1"); break;	// 1
+		case IDC_BUTTON5: s.append("2"); break;	// 2
+		case IDC_BUTTON6: s.append("3"); break;	// 3
+		case IDC_BUTTON7: s.append("4"); break;	// 4
+		case IDC_BUTTON8: s.append("5"); break;	// 5
+		case IDC_BUTTON9: s.append("6"); break;	// 6
+		case IDC_BUTTON10: makeString(s, 0, "+"); break; // +
+		case IDC_BUTTON11: s.append("7"); break;	// 7
+		case IDC_BUTTON12: s.append("8"); break;	// 8
+		case IDC_BUTTON13: s.append("9"); break;	// 9
 		case IDC_BUTTON14:	// Back
-			printf("Back");						
+			printf("Back");
 			makeString(s, 2, "");
 			break;
-		case IDC_BUTTON15: makeString(s, 0, "/"); break;	// /									
-		case IDC_BUTTON16: makeString(s, 0, "*"); break;	// *									
-		case IDC_BUTTON17: makeString(s, 0, "-"); break;	// -									
-		}		
-		cout << s << endl;	
+		case IDC_BUTTON15: makeString(s, 0, "/"); break;	// /
+		case IDC_BUTTON16: makeString(s, 0, "*"); break;	// *
+		case IDC_BUTTON17: makeString(s, 0, "-"); break;	// -
+		}
+		cout << s << endl;
 		InvalidateRect(hDlg, NULL, FALSE);
 		break;
-	}		
+	}
 	case WM_CLOSE:
-		FreeConsole();
-		UnhookWindowsHookEx(hHook);
-		EndDialog(hDlg, LOWORD(wParam));
+		close(hDlg, wParam);
 		return (INT_PTR)TRUE;
 		break;
 	case WM_PAINT:
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hDlg, &ps);
 		SetDlgItemText(hDlg, IDC_EDIT1, s.c_str());
-		/*RECT rc = {10, 10, 173, 120};// x, y, width, height				
+		/*RECT rc = {10, 10, 173, 120};// x, y, width, height
 		UINT format = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_WORDBREAK;
 		DrawText(hdc, s.c_str(), -1, &rc, format | DT_CALCRECT);
 		DrawText(hdc, s.c_str(), -1, &rc, format);*/
