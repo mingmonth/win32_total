@@ -6,6 +6,7 @@
 #include "Windowsx.h"
 #include "Commctrl.h"
 #include "stdio.h"
+#include "math.h"
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -24,6 +25,8 @@ stack<oper> opStack;	// 연산자 스택
 #define MAX_LOADSTRING 100
 
 INT_PTR CALLBACK    DlgProc(HWND, UINT, WPARAM, LPARAM);
+HHOOK hhk;	// 전역으로 설정
+HHOOK hHook{ NULL };
 
 void init() {
 	AllocConsole();
@@ -70,7 +73,7 @@ void checkString(string &s) {
 				s.erase(s.length() - 3, 3);				
 			}			
 		}		
-	}
+	}	
 }
 
 void backSpace(string &s) {
@@ -94,7 +97,7 @@ void backSpace(string &s) {
 }
 
 void calculate() {
-	int a, b, result;
+	double a, b, result;
 	b = numStack.top();
 	numStack.pop();
 	a = numStack.top();
@@ -117,15 +120,117 @@ void calculate() {
 	numStack.push(result);
 }
 
+LRESULT CALLBACK KeybdProc(int code, WPARAM wParam, LPARAM lParam) {
+	/*if (code < 0) {
+		return CallNextHookEx(hhk, code, wParam, lParam);		
+	}
+	//printf("%d %c\n", (char)wParam, (char)wParam);	
+	switch (wParam) {
+	case 65:
+		printf("%d %c\n", (char)wParam, (char)wParam);
+		break;
+	}
+	return CallNextHookEx(hhk, code, wParam, lParam);*/
+
+	if (wParam == WM_KEYDOWN) {
+		KBDLLHOOKSTRUCT *kbdStruct = (KBDLLHOOKSTRUCT*)lParam;
+		DWORD wVirtKey = kbdStruct->vkCode;
+		DWORD wScanCode = kbdStruct->scanCode;
+
+		BYTE lpKeyState[256];
+		GetKeyboardState(lpKeyState);
+		/*lpKeyState[Keys::ShiftKey] = 0;
+		lpKeyState[Keys::Capital] = 0;
+		if (shift_active()) {
+			lpKeyState[Keys::ShiftKey] = 0x80;
+		}
+		if (capital_active()) {
+			lpKeyState[Keys::Capital] = 0x01;
+		}*/
+		if (wVirtKey == VK_RETURN) {
+			printf("Enter KEY!!!\n");
+			return TRUE;
+		}
+
+		char result;
+		ToAscii(wVirtKey, wScanCode, lpKeyState, (LPWORD)&result, 0);
+		printf("d : %d\n", result);
+		printf("x : %x\n", result);
+		printf("c : %c\n", result);		
+		switch (result) {
+		case '1':
+			printf("1\n");
+			break;
+		case '2':
+			printf("2\n");
+			break;
+		case '3':
+			printf("3\n");
+			break;
+		case '4':
+			printf("4\n");
+			break;
+		case '5':
+			printf("5\n");
+			break;
+		case '6':
+			printf("6\n");
+			break;
+		case '7':
+			printf("7\n");
+			break;
+		case '8':
+			printf("8\n");
+			break;
+		case '9':
+			printf("9\n");
+			break;
+		case '0':
+			printf("0\n");
+			break;		
+		case '+':
+			printf("+\n");
+			break;
+		case '-':
+			printf("-\n");
+			break;
+		case '*':
+			printf("*\n");
+			break;
+		case '/':
+			printf("/\n");
+			break;
+		case '.':
+			printf(".\n");
+			break;
+		}
+		std::cout << result << std::endl;
+	}
+
+	return CallNextHookEx(hHook, code, wParam, lParam);
+}
+
 // 정보 대화 상자의 메시지 처리기입니다.
 INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static string s;
 	char contents[100];
     UNREFERENCED_PARAMETER(lParam);
+	//static HWND hEnterButton;
     switch (message)
-    {
+    {	
+	/*case WM_CHAR:
+		printf("ABC");
+		printf("%c\n", (char)wParam);
+		break;*/
     case WM_INITDIALOG:
+		//hhk = SetWindowsHookEx(WH_KEYBOARD, KeybdProc, NULL, GetCurrentThreadId());
+		hHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeybdProc, NULL, 0);
+		if (hHook == NULL) {
+			std::cout << "Keyboard hook failed!" << std::endl;
+		}		
+		//hEnterButton = GetDlgItem(hDlg, IDC_BUTTON3);
+		//SetFocus(hEnterButton);
         return (INT_PTR)TRUE;
 
 	case WM_COMMAND: {		
@@ -151,52 +256,69 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			checkString(s);
 			printf("Enter\n");
 			stringstream ss;
-			ss.str(s);
-			string tok;
-			while (ss >> tok) {
-				//cout << tok << endl;
-				if (tok == "(") {
-					opStack.push({0, tok});
-				}
-				else if (tok == ")") {
-					while (opStack.top().op != "(") {
-						calculate();
+			if (!s.empty()) {
+				ss.str(s);
+				string tok;
+				while (ss >> tok) {
+					//cout << tok << endl;
+					if (tok == "(") {
+						opStack.push({ 0, tok });
 					}
-					opStack.pop();
-				}
-				else if (tok == "*" || tok == "/" || tok == "+" || tok == "-") {
-					int prior;	// 연산자 우선순위
-					if (tok == "*") {
-						prior = 2;
+					else if (tok == ")") {
+						while (opStack.top().op != "(") {
+							calculate();
+						}
+						opStack.pop();
 					}
-					else if (tok == "/") {
-						prior = 2;
-					}
-					else if (tok == "+") {
-						prior = 1;
-					}
-					else if (tok == "-") {
-						prior = 1;
-					}
+					else if (tok == "*" || tok == "/" || tok == "+" || tok == "-") {
+						int prior;	// 연산자 우선순위
+						if (tok == "*") {
+							prior = 2;
+						}
+						else if (tok == "/") {
+							prior = 2;
+						}
+						else if (tok == "+") {
+							prior = 1;
+						}
+						else if (tok == "-") {
+							prior = 1;
+						}
 
-					while (!opStack.empty() && prior <= opStack.top().prior) {
-						calculate();
+						while (!opStack.empty() && prior <= opStack.top().prior) {
+							calculate();
+						}
+						opStack.push({ prior, tok });
 					}
-					opStack.push({ prior, tok });
+					else {
+						numStack.push(stod(tok));
+					}
+				}
+
+				while (!opStack.empty()) {
+					calculate();
+				}
+				
+				printf("result: %f\n", numStack.top());				
+				double integer, fraction;
+				fraction = modf(numStack.top(), &integer);
+				printf("%f = %f + %f\n", numStack.top(), integer, fraction);
+				// 1.50
+				// 1.5
+				char result[100] = { 0, };
+				if (fraction > 0) {
+					sprintf(result, "%.2f", numStack.top());
 				}
 				else {
-					numStack.push(stod(tok));
+					sprintf(result, "%.f", numStack.top());
 				}
-			}
+				
 
-			while (!opStack.empty()) {
-				calculate();
-			}
-
-			cout << numStack.top() << endl;
-			ostringstream os;
-			os << numStack.top();
-			SetDlgItemText(hDlg, IDC_STATIC, os.str().c_str());
+				//cout << numStack.top() << endl;
+				//ostringstream os;
+				//os << numStack.top();
+				SetDlgItemText(hDlg, IDC_STATIC, result);
+			}			
 			break;
 		}			
 		case IDC_BUTTON4:	// 1
@@ -249,6 +371,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	}		
 	case WM_CLOSE:
 		FreeConsole();
+		UnhookWindowsHookEx(hhk);
 		EndDialog(hDlg, LOWORD(wParam));
 		return (INT_PTR)TRUE;
 		break;
