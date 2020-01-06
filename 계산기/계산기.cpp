@@ -27,6 +27,7 @@ stack<oper> opStack;	// 연산자 스택
 INT_PTR CALLBACK    DlgProc(HWND, UINT, WPARAM, LPARAM);
 HHOOK hHook { NULL };
 static string s;
+//static int nPointCount = 0;
 HWND g_hDlg;
 
 void init() {
@@ -50,48 +51,98 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	return 0;
 }
 
-// nFlag (addOperator: 0, checkString: 1, backSpace: 2, point: 3)
-void makeString(string &s, int nFlag, string op) {
-	// 빈 문자열인지 검사
-	if (!s.empty()) {
-		// 문자열이 3보다 커야 마지막 입력 값을 검사 하도록 처리
+void testString(string str) {
+	stringstream ss(str);
+	string part;
+	while (ss >> part) {
+		cout << "part: " << part << endl;
+	}
+}
+
+
+void makeString2(string &s, int nFlag, string str) {	
+	if (nFlag == 0) {	// 연산자 추가
+		s.append(" " + str + " ");
+	}
+	else if (nFlag == 2) {	// 문자열 하나 지우기
 		if (s.length() > 3) {
-			// 마지막 입력 값 검사, 뒤에 공백을 같이 넣어줘야 함.
-			if (!strcmp(&s[s.length() - 2], "+ ") || !strcmp(&s[s.length() - 2], "- ") || !strcmp(&s[s.length() - 2], "* ") || !strcmp(&s[s.length() - 2], "/ ")) {
-				// 기존 연산자 삭제
+			if (!strcmp(&s[s.length() - 2], "( ") || !strcmp(&s[s.length() - 2], ") ")) {
 				s.erase(s.length() - 3, 3);
-				if (nFlag == 0) {	// 연산자 추가
-					s.append(" " + op + " ");
-				}
 			}
-			else if (!strcmp(&s[s.length() - 1], ".")) {
-				printf("소수점이 이미 찍혀있습니다!");
-				if (nFlag == 2) {	// 문자열 하나 지우기
-					s.erase(s.length() - 1, 1);
-				}
-			} else {
-				if (nFlag == 0) {	// 연산자 추가
-					s.append(" " + op + " ");
-				} else if (nFlag == 2) {	// 문자열 하나 지우기
-					s.erase(s.length() - 1, 1);
-				} else if (nFlag == 3) {
-					s.append(op);
-				}
+			else {
+				s.erase(s.length() - 1, 1);
 			}
 		}
 		else {
-			if (!strcmp(&s[s.length() - 1], ".")) {
-				printf("소수점이 이미 찍혀있습니다!");
-				if (nFlag == 2) {	// 문자열 하나 지우기
-					s.erase(s.length() - 1, 1);
+			s.erase(s.length() - 1, 1);
+		}		
+	}
+	else if (nFlag == 1) {
+		printf("전체 문자열을 체크합니다.\n");
+		size_t nLeftBrace = count(s.begin(), s.end(), '(');
+		size_t nRightBrace = count(s.begin(), s.end(), ')');
+		printf("(:%d, ):%d\n", nLeftBrace, nRightBrace);
+		if (nLeftBrace != nRightBrace) {
+			if (nLeftBrace > nRightBrace) {
+				for (int i = 0; i < nLeftBrace - nRightBrace; i++) {
+					s.append(" ) ");
 				}
-			} else if (nFlag == 0) {	// 연산자 추가
-				s.append(" " + op + " ");
-			} else if (nFlag == 2) {	// 문자열 하나 지우기
-				s.erase(s.length() - 1, 1);
 			}
-			else if (nFlag == 3) {
-				s.append(op);
+			else {
+				for (int i = 0; i < nRightBrace - nLeftBrace; i++) {
+					s.append(" ( ");
+				}
+			}
+		}
+	}	
+}
+
+// nFlag (addOperator: 0, checkString: 1, backSpace: 2, general: 3)
+void makeString(string &s, int nFlag, string str) {
+	// 일반적인 입력 값 처리
+	if (nFlag == 3) {
+		s.append(str);
+		stringstream ss(s);
+		string part;
+		while (ss >> part) {
+			cout << "parts: " << part << endl;
+		}
+
+		size_t n = count(part.begin(), part.end(), '.');
+
+		if (n > 1) {
+			printf("한 파트에 소수점 개수는 하나 이상일 수 없습니다!!!");
+			s.erase(s.length() - 1, 1);
+		}
+		printf("소수점 개수 %d\n", n);
+	}
+	else {
+		// 빈 문자열인지 검사	
+		if (!s.empty()) {
+			// 문자열이 3보다 커야 마지막 입력 값을 검사 하도록 처리
+			if (s.length() > 3) {
+				// 마지막 입력 값 검사, 뒤에 공백을 같이 넣어줘야 함.
+				if (!strcmp(&s[s.length() - 2], "+ ") || !strcmp(&s[s.length() - 2], "- ") || !strcmp(&s[s.length() - 2], "* ") || !strcmp(&s[s.length() - 2], "/ ")) {					
+					if (str.find("(") == string::npos) {
+						// 기존 연산자 삭제
+						s.erase(s.length() - 3, 3);
+					}					
+					if (nFlag == 0) {	// 연산자 추가
+						s.append(" " + str + " ");
+					}
+				}
+				else {
+					makeString2(s, nFlag, str);
+				}
+			}
+			else {
+				makeString2(s, nFlag, str);
+			}
+		}
+		else {
+			printf("왼쪽 괄호 시작!!! %d\n", str.find("("));
+			if (nFlag == 0 && str.find("(") != string::npos) {
+				s.append(" " + str + " ");
 			}
 		}
 	}
@@ -118,12 +169,17 @@ void calculate() {
 	else if (oper == "-") {
 		result = a - b;
 	}
+	else if (oper == "(") {
+
+	}
 	numStack.push(result);
 }
 
 void enterAction(char *result) {
 	makeString(s, 1, "");
 	printf("Enter\n");
+	cout << s << endl;
+
 	stringstream ss;
 	if (!s.empty()) {
 		ss.str(s);
@@ -190,6 +246,7 @@ LRESULT CALLBACK KeybdProc(int code, WPARAM wParam, LPARAM lParam) {
 		GetKeyboardState(lpKeyState);
 		if (wVirtKey == VK_RETURN) {
 			printf("Enter KEY!!!\n");
+			testString(s);
 			char result[100] = { 0, };
 			enterAction(result);
 			SetDlgItemText(g_hDlg, IDC_STATIC, result);
@@ -203,31 +260,31 @@ LRESULT CALLBACK KeybdProc(int code, WPARAM wParam, LPARAM lParam) {
 		}
 		else if (wVirtKey == VK_ESCAPE) {
 			printf("ESC KEY!!!\n");
-			close(g_hDlg, wParam);
-			return TRUE;
+			close(g_hDlg, NULL);
+			return FALSE;
 		}
 
 		char result;
 		ToAscii(wVirtKey, wScanCode, lpKeyState, (LPWORD)&result, 0);
 		printf("d: %d, x: %x, c: %c\n", result, result, result);
 		switch (result) {
-		case '1': printf("1\n"); s.append("1"); break;
-		case '2': printf("2\n"); s.append("2"); break;
-		case '3': printf("3\n"); s.append("3"); break;
-		case '4': printf("4\n"); s.append("4"); break;
-		case '5': printf("5\n"); s.append("5"); break;
-		case '6': printf("6\n"); s.append("6"); break;
-		case '7': printf("7\n"); s.append("7"); break;
-		case '8': printf("8\n"); s.append("8"); break;
-		case '9': printf("9\n"); s.append("9"); break;
-		case '0': printf("0\n"); s.append("0"); break;
+		case '1': printf("1\n"); makeString(s, 3, "1"); break;
+		case '2': printf("2\n"); makeString(s, 3, "2"); break;
+		case '3': printf("3\n"); makeString(s, 3, "3"); break;
+		case '4': printf("4\n"); makeString(s, 3, "4"); break;
+		case '5': printf("5\n"); makeString(s, 3, "5"); break;
+		case '6': printf("6\n"); makeString(s, 3, "6"); break;
+		case '7': printf("7\n"); makeString(s, 3, "7"); break;
+		case '8': printf("8\n"); makeString(s, 3, "8"); break;
+		case '9': printf("9\n"); makeString(s, 3, "9"); break;
+		case '0': printf("0\n"); makeString(s, 3, "10"); break;
 		case '+': printf("+\n"); makeString(s, 0, "+"); break;
 		case '-': printf("-\n"); makeString(s, 0, "-"); break;
 		case '*': printf("*\n"); makeString(s, 0, "*"); break;
 		case '/': printf("/\n"); makeString(s, 0, "/"); break;
-		case '.': printf(".\n"); makeString(s, 3, "."); break;
-		case '(': printf("(\n"); s.append(" ( "); break;
-		case ')': printf(")\n"); s.append(" ) "); break;
+		case '.': printf(".\n"); makeString(s, 3, "."); break;	// 하나의 그룹안에서 소수점은 하나여야함.
+		case '(': printf("(\n"); makeString(s, 0, "("); break;
+		case ')': printf(")\n"); makeString(s, 0, ")"); break;
 		case 'c':
 			printf("c\n");
 			s.clear();
@@ -261,7 +318,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		string op;
 
 		switch (LOWORD(wParam)) {
-		case IDC_BUTTON1: s.append("0"); break;	// 0
+		case IDC_BUTTON1: makeString(s, 3, "0"); break;	// 0
 		case IDC_BUTTON2:	// C:clear
 			printf("C");
 			s.clear();
@@ -274,16 +331,16 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			SetDlgItemText(hDlg, IDC_STATIC, result);
 			break;
 		}
-		case IDC_BUTTON4: s.append("1"); break;	// 1
-		case IDC_BUTTON5: s.append("2"); break;	// 2
-		case IDC_BUTTON6: s.append("3"); break;	// 3
-		case IDC_BUTTON7: s.append("4"); break;	// 4
-		case IDC_BUTTON8: s.append("5"); break;	// 5
-		case IDC_BUTTON9: s.append("6"); break;	// 6
+		case IDC_BUTTON4: makeString(s, 3, "1"); break;	// 1
+		case IDC_BUTTON5: makeString(s, 3, "2"); break;	// 2
+		case IDC_BUTTON6: makeString(s, 3, "3"); break;	// 3
+		case IDC_BUTTON7: makeString(s, 3, "4"); break;	// 4
+		case IDC_BUTTON8: makeString(s, 3, "5"); break;	// 5
+		case IDC_BUTTON9: makeString(s, 3, "6"); break;	// 6
 		case IDC_BUTTON10: makeString(s, 0, "+"); break; // +
-		case IDC_BUTTON11: s.append("7"); break;	// 7
-		case IDC_BUTTON12: s.append("8"); break;	// 8
-		case IDC_BUTTON13: s.append("9"); break;	// 9
+		case IDC_BUTTON11: makeString(s, 3, "7"); break;	// 7
+		case IDC_BUTTON12: makeString(s, 3, "8"); break;	// 8
+		case IDC_BUTTON13: makeString(s, 3, "9"); break;	// 9
 		case IDC_BUTTON14:	// Back
 			printf("Back");
 			makeString(s, 2, "");
